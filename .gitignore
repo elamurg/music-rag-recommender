@@ -68,3 +68,4 @@ logs/
 
 # Docker
 *.tar
+venv/
