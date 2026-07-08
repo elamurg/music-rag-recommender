@@ -11,7 +11,6 @@ build/
 
 # Virtual environments
 .venv/
-venv/
 env/
 
 # Data files — never commit raw or processed data
@@ -68,4 +67,3 @@ logs/
 
 # Docker
 *.tar
-venv/
