@@ -30,7 +30,7 @@ CURATED_TAGS = [
     "study", "sleep"
 ]
 TRACKS_PER_TAG = 200
-CHART_LIMIT =1500
+CHART_LIMIT =1000
 POLITE_DELAY_SEC = 0.25 #responds to 4 api calls per second
 
 def get_lastfm_client() -> pylast.LastFMNetwork:
