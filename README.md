@@ -131,12 +131,7 @@ Guard rails against hallucination will include structured output validation (rec
 - `src/generation/prompt.py` — prompt templates and structured output schemas.
 - `src/generation/llm.py` — model invocation with retry and validation logic.
 
----
-
 ## Layer 4: Identity resolution
-
-**Status:** Planned.
-
 ### Purpose
 
 Layer 4 converts the LLM's recommended track and artist names into Spotify track identifiers, producing URLs that the end user can click to play the recommendation.
@@ -151,11 +146,7 @@ Resolution failures (no Spotify hit, or hit below confidence threshold) will be 
 
 - `src/resolution/spotify.py` — Spotify search and URL construction.
 
----
-
 ## API surface
-
-**Status:** Planned.
 
 The complete system will be exposed as a FastAPI application with a single primary endpoint:
 
@@ -164,8 +155,6 @@ The complete system will be exposed as a FastAPI application with a single prima
 Additional endpoints for corpus statistics, retrieval-only queries, and health checks will support evaluation and monitoring.
 
 Deployment will target Docker (`Dockerfile` and `docker-compose.yml` at repository root) with Kubernetes manifests under `k8s/` for later cloud deployment if required.
-
----
 
 # Appendix: Implementation Log
 
