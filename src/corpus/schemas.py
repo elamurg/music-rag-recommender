@@ -26,3 +26,13 @@ class TrackEnrichment:
     lastfm_url: str | None = None
     tags: list[TagInfo] = field(default_factory=list)
     similar: list[SimilarTrackInfo] = field(default_factory=list)
+
+@dataclass
+class ArtistEnrichment:
+    """Everything extracted from artist.getInfo for one artist."""
+    mbid: str | None = None
+    listener_count: int | None = None
+    playcount: int | None = None
+    bio_summary: str | None = None
+    bio_content: str | None = None
+    tags: list[TagInfo] = field(default_factory=list)

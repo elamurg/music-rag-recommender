@@ -5,7 +5,7 @@ from typing import Callable, TypeVar
 import pylast
 import requests
 
-from .schemas import TrackEnrichment, TagInfo, SimilarTrackInfo
+from .schemas import TrackEnrichment, TagInfo, SimilarTrackInfo, ArtistEnrichment
 
 T = TypeVar("T")
 SIMILAR_TRACKS_LIMIT = 30
@@ -122,4 +122,46 @@ def parse_enrichment(info_raw: dict, similar_raw: list) -> TrackEnrichment:
             )
         except (AttributeError, ValueError):
             continue
+    return enrichment
+
+@retry
+def fetch_artist_info(artist: pylast.Artist) -> dict:
+    """Fetch artist metadata from Last.fm's artist.getInfo."""
+    return {
+        "mbid": artist.get_mbid(),
+        "listener_count": artist.get_listener_count(),
+        "playcount": artist.get_playcount(),
+        "bio_summary": artist.get_bio_summary(),
+        "bio_content": artist.get_bio_content(),
+        "top_tags": artist.get_top_tags(limit=20),
+    }
+
+
+def parse_artist_enrichment(info_raw: dict) -> ArtistEnrichment:
+    """Convert raw pylast artist responses into a typed ArtistEnrichment"""
+    enrichment = ArtistEnrichment()
+
+    mbid = info_raw.get("mbid")
+    enrichment.mbid = mbid if mbid else None
+
+    lc = info_raw.get("listener_count")
+    enrichment.listener_count = int(lc) if lc is not None else None
+
+    pc = info_raw.get("playcount")
+    enrichment.playcount = int(pc) if pc is not None else None
+
+    bs = info_raw.get("bio_summary")
+    enrichment.bio_summary = bs.strip() if bs else None
+
+    bc = info_raw.get("bio_content")
+    enrichment.bio_content = bc.strip() if bc else None
+
+    for item in info_raw.get("top_tags", []):
+        try:
+            enrichment.tags.append(
+                TagInfo(name=item.item.get_name().strip(), weight=int(item.weight))
+            )
+        except (AttributeError, ValueError):
+            continue
+
     return enrichment
