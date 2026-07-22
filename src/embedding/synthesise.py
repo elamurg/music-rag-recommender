@@ -9,10 +9,10 @@ from src.corpus.db import get_conn
 
 # document layout constants
 TARGET_DOC_LENGTH = 1000 
-TAG_COUNT = 5                   
+TAG_COUNT = 10                 
 WIKI_EXCERPT_LENGTH = 200 
-BIO_EXCERPT_LENGTH = 200        
-LYRICS_EXCERPT_LENGTH = 500     
+BIO_EXCERPT_LENGTH = 100       
+LYRICS_EXCERPT_LENGTH = 200   
 
 HARD_CAP_MULTIPLIER = 1.2
 
@@ -83,14 +83,16 @@ def synthesise_document(track_data: dict) -> str:
     """Build the document string from a track's assembled enrichment data."""
     lines: list[str] = []
 
+    tags = track_data.get("tags", [])
+    if tags:
+        top_tags = tags[:TAG_COUNT]
+        amplified = top_tags[:3] + top_tags
+        lines.append(f"Genres and moods: {', '.join(amplified)}")
+
     lines.append(f"Title: {track_data['name']} by {track_data['artist_name']}")
 
     if track_data.get("album_name"):
         lines.append(f"Album: {track_data['album_name']}")
-
-    tags = track_data.get("tags", [])
-    if tags:
-        lines.append(f"Tags: {', '.join(tags[:TAG_COUNT])}")
 
     if track_data.get("wiki_content"):
         cleaned = clean_wiki_text(track_data["wiki_content"])
@@ -148,6 +150,20 @@ def fetch_track_data(conn, track_id: int) -> dict | None:
         """,
         (track_id, TAG_COUNT),
     ).fetchall()
+    if not tag_rows:
+        tag_rows = conn.execute(
+            """
+            SELECT tags.name
+            FROM tags
+            JOIN artist_tags at ON at.tag_id = tags.id
+            JOIN artists a ON a.id = at.artist_id
+            JOIN tracks t on t.artist_name = a.name
+            WHERE t.id = ?
+            ORDER BY at.weight DESC
+            LIMIT ?
+            """,
+            (track_id, TAG_COUNT)
+        ).fetchall()
 
     return {
         "id": row["id"],
