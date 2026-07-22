@@ -1,0 +1,1 @@
+"""The seach-and-match logic with catching."""
