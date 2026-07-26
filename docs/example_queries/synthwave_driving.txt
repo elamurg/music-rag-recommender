@@ -1,0 +1,31 @@
+
+Query: 'chill synthwave for late night driving'
+Retrieving top-20...
+[retrieval] loading index: corpus.faiss
+[retrieval] loading model: sentence-transformers/all-MiniLM-L6-v2
+Retrieved 20 candidates
+
+Generating 5 recommendations...
+
+Recommendations (grounded by LLM):
+======================================================================
+
+1. We're Finally Landing by Home
+   This track by Home is tagged as chillwave, synthwave, and chillsynth, making it a perfect match for chill synthwave. The title 'We're Finally Landing' evokes the imagery of late-night driving, and the album 'Before The Night' reinforces the nighttime aesthetic requested in the query.
+As seen on Spotify: https://open.spotify.com/track/06LQQ8NO6jO57b6I5PMqd1
+
+2. New Machines by Home
+   Another Home track tagged as chillwave, synthwave, and chillsynth from the album 'Odyssey'. The combination of these genres directly matches the 'chill synthwave' request, and Home's production style is known for creating atmospheric, driving-friendly soundscapes.
+As seen on Spotify: https://open.spotify.com/track/3qBJtUYJfKOx6LAfeloSzs
+
+3. Pyxis by Home
+   This Home track 'Pyxis' shares the same chillwave, synthwave, and chillsynth genre tags as the other Home tracks. From the album 'Before The Night', it fits the late-night driving aesthetic perfectly with its chill synthwave sound.
+As seen on Spotify: https://open.spotify.com/track/0wEUidIu8Fux5CrUomBsFg
+
+4. Slow Drip by De Lorra
+   De Lorra's 'Slow Drip' is explicitly tagged as synthwave, dreamwave, and chillwave, combining the exact genres requested. The artist is described as a Synthwave/Chillwave producer, and the dreamwave tag suggests the relaxed, atmospheric quality ideal for late-night driving.
+As seen on Spotify: https://open.spotify.com/track/2MMUGOqJXwSWEY9yGYl8D2
+
+5. Gloria by The Midnight
+   The Midnight's 'Gloria' is tagged as synthwave and dreamwave, with lyrics directly referencing being 'asleep in the driver's seat', making it thematically perfect for late-night driving. The dreamwave tag indicates the chill, atmospheric quality that matches the query's requirements.
+As seen on Spotify: https://open.spotify.com/track/6wDOhiIwYDQvvn2ozXYeC0

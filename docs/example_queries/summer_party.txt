@@ -1,0 +1,31 @@
+
+Query: 'upbeat pop for a summer party'
+Retrieving top-20...
+[retrieval] loading index: corpus.faiss
+[retrieval] loading model: sentence-transformers/all-MiniLM-L6-v2
+Retrieved 20 candidates
+
+Generating 5 recommendations...
+
+Recommendations (grounded by LLM):
+======================================================================
+
+1. Summer by Calvin Harris
+   "Summer" by Calvin Harris is an upbeat electronic dance track that explicitly celebrates summer romance and experiences. Released as a single from his album "Motion," it debuted at number one on the UK Singles Chart, making it a proven party anthem. The song's dance and electro house genres combined with its summer theme make it perfect for a summer party.
+As seen on Spotify: https://open.spotify.com/track/6YUTL4dYpB9xZO5qExPf05
+
+2. Endless Summer by Scooter
+   "Endless Summer" by Scooter is an energetic dance track that combines techno, happy hardcore, and eurodance elements specifically designed for parties. The lyrics explicitly reference party people and celebrate summer as "the most exciting season," with enthusiastic callouts like "Alright! / Clap your hands!" making it ideal for an upbeat summer party atmosphere.
+As seen on Spotify: https://open.spotify.com/track/1DOOOJO6waJF2Sw5MN2oX9
+
+3. Summer Love by Trevor Something
+   "Summer Love" by Trevor Something is an upbeat synthwave/synthpop track that celebrates summer experiences with a fun, carefree vibe. The lyrics describe quintessential summer activities like going to the beach and chilling out, perfectly capturing the relaxed yet energetic mood appropriate for a summer party.
+As seen on Spotify: https://open.spotify.com/track/5lAFwreoMCApCdeUHxPFUm
+
+4. Arcade Summer by FM-84
+   "Arcade Summer" by FM-84 is a synthwave/retrowave track that evokes nostalgic 80s summer vibes with its electronic production. The combination of synthwave and retrowave genres creates an upbeat, energetic atmosphere that works well for party settings while maintaining a summer-themed aesthetic.
+As seen on Spotify: https://open.spotify.com/track/6cGuuaVjtieAcw4chRhIbx
+
+5. Sunny by Boney M.
+   "Sunny" by Boney M. is a classic disco and dance track from the 70s with an upbeat, positive energy perfect for parties. The lyrics celebrate brightness and joy with lines about dark days being gone and bright days being here, while the disco and funk production ensures a danceable, party-ready sound.
+As seen on Spotify: https://open.spotify.com/track/3pf96IFggfQuT6Gafqx2rt
