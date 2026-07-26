@@ -17,6 +17,7 @@ from src.generation.prompt import (
     build_user_prompt,
 )
 from src.retrieval.query import TrackHit
+from src.resolution.spotify import resolve_track
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
@@ -120,6 +121,21 @@ def _fallback_from_hits(hits: list[TrackHit], n: int) -> list[Recommendation]:
         for hit in hits[:n]
     ]
 
+def _resolve_spotify_links(
+    recommendations: list[Recommendation],
+    hits: list[TrackHit],
+) -> list[Recommendation]:
+    """Populate spotify_url on each recommendation"""
+    hit_by_id = {h.track_id: h for h in hits}
+    for rec in recommendations:
+        hit = hit_by_id.get(rec.track_id)
+        if hit is None:
+            continue
+        match = resolve_track(rec.track_id, hit.name, hit.artist_name)
+        rec.spotify_url = match.spotify_url
+        rec.spotify_confidence = match.confidence
+    return recommendations
+
 def generate_recommendations(query: str, hits: list[TrackHit], n: int = DEFAULT_N) -> GenerationResponse:
     """Generate a ranked, grounded set of recommendations from retrieval hits.
     Args as inputs are:
@@ -140,20 +156,26 @@ def generate_recommendations(query: str, hits: list[TrackHit], n: int = DEFAULT_
         raw = _call_claude(user_prompt)
     except Exception as e:
         print(f"LLM call failed: {e}")
-        return GenerationResponse(recommendations=_fallback_from_hits(hits, n),grounded=False)
+        return GenerationResponse(recommendations=_resolve_spotify_links(_fallback_from_hits(hits, n), hits),grounded=False)
 
     parsed = _parse_response(raw)
     if parsed is None:
-        return GenerationResponse(recommendations=_fallback_from_hits(hits, n), grounded=False, raw_llm_output=raw)
+        return GenerationResponse(recommendations=_resolve_spotify_links(_fallback_from_hits(hits, n), hits), grounded=False, raw_llm_output=raw)
 
     filtered = _filter_hallucinated(parsed, valid_ids)
 
     if not filtered.recommendations:
         #fall back if only hallucionated results were returned
-        return GenerationResponse(recommendations=_fallback_from_hits(hits, n), grounded=False, raw_llm_output=raw)
+        return GenerationResponse(
+            recommendations=_resolve_spotify_links(_fallback_from_hits(hits, n), hits),
+            grounded=False,
+            raw_llm_output=raw,
+        )
+    
+    filtered.recommendations = _resolve_spotify_links(filtered.recommendations[:n], hits)
 
     return GenerationResponse(
-        recommendations=filtered.recommendations[:n],
+        recommendations=filtered.recommendations,
         grounded=True,
         raw_llm_output=raw,
     )
@@ -192,6 +214,12 @@ if __name__ == "__main__":
             title = f"{row['name']} by {row['artist_name']}" if row else f"[unknown track {rec.track_id}]"
             print(f"\n{i}. {title}")
             print(f"   {rec.justification}")
+            if rec.spotify_url:
+                print(f"As seen on Spotify: {rec.spotify_url}")
+            elif rec.spotify_confidence is not None:
+                print(f"No Spotify match: {rec.spotify_confidence:.1f}%")
+            else:
+                print(f"Not resolved.")
 
     if args.show_raw and response.raw_llm_output:
         print("\n" + "=" * 70)

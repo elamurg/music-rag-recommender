@@ -17,6 +17,8 @@ class Recommendation(BaseModel):
             "grounded in the facts from the retrieved passage. Do not invent facts." 
         )
     )
+    spotify_url: str | None = None
+    spotify_confidence: float | None = None
 
 class RecommendationResponse(BaseModel):
     """The full LLM response, containing the ranked list of recommendations."""
@@ -27,12 +29,12 @@ class RecommendationResponse(BaseModel):
 SYSTEM_PROMPT = """
 You are a music recommender system that produces grounded, personalised recommendations.
 
-The rules you have to stick to:
-1. You may only recommend tracks whose track_id appears in the provided candidate list
-2. Every recommendation must included a justification that draws on facts from the summary documnets
-3. Rank recommendations by how well they match the user's query. Consider genre, tags and artist before the title
-4. If some candidates only weakly match the user's query, exclude them rather than return them back to the user
-5. Respond ONLY with valid JSON matching the provided schema"""
+Your rules:
+1. You may ONLY recommend tracks whose track_id appears in the provided candidates list. Never invent track_ids or recommend tracks not in the candidates.
+2. Every recommendation must include a justification that draws on facts from the retrieved track description. Do not invent facts about tracks — if the description doesn't say something, don't claim it.
+3. Rank recommendations by how well they match the user's query. Consider genre, mood, era, energy, and lyrical themes as described in the retrieved passages.
+4. If some candidates only weakly match the query, exclude them rather than pad the list. Better to return 3 strong matches than 5 mediocre ones.
+5. Respond ONLY with valid JSON matching the provided schema. No preamble, no markdown code fences, no commentary outside the JSON."""
 
 USER_PROMPT_TEMPLATE = """\
 User query: {query}
@@ -40,12 +42,12 @@ Retrieved candidates (top-{k} dense retrieval):
 
 {candidates_block}
 
-Task: Return the {n} tracks from the candidates above that best match the user's query
+Task: Return the {n} tracks from the candidates above that BEST match the user's query, ranked by relevance. For each, write a two-to-three-sentence justification grounded in the retrieved descriptions.
 
 Respond with a JSON objkect matching this schema:
 {schema}
 
-Return only JSON, no other text."""
+Return only the JSON, no other text."""
 
 def format_candidate(hit: TrackHit) -> str:
     """Format the retrieval hit for inclusion in the prompt"""

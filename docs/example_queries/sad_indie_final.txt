@@ -1,0 +1,31 @@
+
+Query: 'sad indie about heartbreak'
+Retrieving top-20...
+[retrieval] loading index: corpus.faiss
+[retrieval] loading model: sentence-transformers/all-MiniLM-L6-v2
+Retrieved 20 candidates
+
+Generating 5 recommendations...
+
+Recommendations (grounded by LLM):
+======================================================================
+
+1. Hellhole Ratrace by Girls
+   This is a lo-fi indie rock track from Girls' album with lyrics directly addressing heartbreak: "I'm sick and tired of the way that I feel / I'm always dreaming and it's never for real / I'm all alone with my deep thoughts / I'm all alone with my heartache." The song perfectly captures the melancholic, introspective quality of sad indie music about emotional pain and loneliness.
+As seen on Spotify: https://open.spotify.com/track/5ajSqgDsJBMCVdAWehkize
+
+2. Missing by The xx
+   "Missing" by The xx is an indie/post-punk track with dream pop and shoegaze influences that explores heartbreak through lyrics like "My heart is beating in a different way / Been gone such a long time / I don't feel the same." The band's characteristic minimalist sound and melancholic atmosphere make this an ideal match for sad indie about lost love.
+As seen on Spotify: https://open.spotify.com/track/5INriIvlLGbDLsDlIu5Kjp
+
+3. Lover's Spit by Broken Social Scene
+   "Lover's Spit" by Broken Social Scene is an indie rock/post-rock track that deals with romantic relationships and heartbreak, as suggested by its title and the imagery in the lyrics about lovers and emotional connections. The Canadian indie collective's experimental, ambient-tinged sound fits the sad indie aesthetic perfectly.
+As seen on Spotify: https://open.spotify.com/track/3Cl35xMXJUEhpPaYBeNUQR
+
+4. Things We Never Did by Sad Lovers and Giants
+   This post-punk/new wave track by Sad Lovers and Giants is described as "eerily beautiful" with lyrics exploring lost connection: "When we were dancing / I saw the look in your eyes / Now we are strangers / Lost in a sea full of..." The band name itself and the gothic, dream pop atmosphere align perfectly with sad indie about heartbreak.
+As seen on Spotify: https://open.spotify.com/track/2zQt8dSCFA95mVfuJlw5Lv
+
+5. Our Tears Help the Flowers Grow by Cold Cave
+   "Our Tears Help the Flowers Grow" by Cold Cave is a darkwave/synthpop track with post-punk elements and explicitly heartbreak-focused lyrics: "I'm not enough / I'm not in love / It's all lies / You left me / To water / Dying flowers / With my tears." The cold wave aesthetic and melancholic electronic sound deliver an indie approach to heartbreak themes.
+As seen on Spotify: https://open.spotify.com/track/5SB1rRhbhDxc34gfhuOIPB
