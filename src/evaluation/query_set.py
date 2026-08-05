@@ -1,1 +1,0 @@
-"""Hand-constructed evaluation queries with gold standards. About 100 queries testing: mood, style, reference adn compound."""

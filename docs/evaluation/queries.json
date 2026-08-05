@@ -1,0 +1,708 @@
+{
+  "meta": {
+    "version": "1.0",
+    "total_queries": 100,
+    "corpus": "music-rag-recommender, ~9500 tracks",
+    "description": "Hand-crafted evaluation query set stratified across five categories that test different aspects of the SoundRAG system.",
+    "categories": {
+      "A": {
+        "name": "genre",
+        "count": 20,
+        "ground_truth_strategy": "tag_match",
+        "description": "Direct genre requests. Ground truth: any track whose track_tags or (fallback) artist_tags include any of the ground_truth_tags."
+      },
+      "B": {
+        "name": "mood",
+        "count": 20,
+        "ground_truth_strategy": "tag_match",
+        "description": "Emotional or atmospheric character requests. Ground truth: track whose tags include any of the ground_truth_tags. Mood tags are noisier than genre tags on Last.fm; some queries fall back to LLM-judge if tag coverage is thin."
+      },
+      "C": {
+        "name": "compound",
+        "count": 20,
+        "ground_truth_strategy": "llm_judge",
+        "description": "Compound queries combining genre + mood + context. Tests compositional reasoning that pure dense retrieval struggles with. Ground truth: LLM (Claude) judges each recommendation as relevant / partially relevant / not relevant."
+      },
+      "D": {
+        "name": "reference",
+        "count": 20,
+        "ground_truth_strategy": "similar_artists",
+        "description": "Reference-artist queries. Ground truth: track is correct if its artist appears in Last.fm's similar_tracks graph for the reference artist, or shares 2+ genre tags with the reference artist."
+      },
+      "E": {
+        "name": "contextual",
+        "count": 20,
+        "ground_truth_strategy": "llm_judge",
+        "description": "Context-based queries framed around real-life situations. Highly subjective. Ground truth: LLM judge."
+      }
+    },
+    "eval_notes": {
+      "tag_match_scoring": "A track is 'correct' if it has any of the ground_truth_tags. Use track_tags first; fall back to artist_tags. Case-insensitive matching. Precision@k and NDCG@k computed against this binary correctness signal.",
+      "similar_artists_scoring": "A track is 'correct' if EITHER (a) its artist_name appears as target_artist in similar_tracks for any track by the reference artist, OR (b) its artist shares 2+ tags with the reference artist. Precision@k and NDCG@k computed against this binary signal.",
+      "llm_judge_scoring": "Claude prompted with (query, recommended track's document_text, retrieved facts) and asked to score each on a 3-point scale: 2=highly relevant, 1=partially relevant, 0=not relevant. NDCG@k uses graded relevance.",
+      "warning_thin_tags": "Before running evaluation, verify each ground_truth_tag has at least 30 tracks in track_tags OR artist_tags. If under 30, statistically underpowered and should be replaced."
+    }
+  },
+  "queries": [
+    {
+      "id": "A01",
+      "category": "genre",
+      "query": "Show me the best indie rock songs",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["indie rock", "indie"]
+    },
+    {
+      "id": "A02",
+      "category": "genre",
+      "query": "Recommend some post-punk tracks",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["post-punk", "Post punk"]
+    },
+    {
+      "id": "A03",
+      "category": "genre",
+      "query": "I want to hear some shoegaze music",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["shoegaze"]
+    },
+    {
+      "id": "A04",
+      "category": "genre",
+      "query": "Play me classic 80s synthwave",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["synthwave", "synth pop", "80s"]
+    },
+    {
+      "id": "A05",
+      "category": "genre",
+      "query": "Recommend electronic dance music",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["electronic", "dance"]
+    },
+    {
+      "id": "A06",
+      "category": "genre",
+      "query": "I want some jazz music to listen to",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["jazz"]
+    },
+    {
+      "id": "A07",
+      "category": "genre",
+      "query": "Show me great psychedelic rock tracks",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["psychedelic rock", "psychedelic"]
+    },
+    {
+      "id": "A08",
+      "category": "genre",
+      "query": "Some good ambient music for background listening",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["ambient"]
+    },
+    {
+      "id": "A09",
+      "category": "genre",
+      "query": "I want to hear some hardcore punk",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["hardcore", "punk"]
+    },
+    {
+      "id": "A10",
+      "category": "genre",
+      "query": "Recommend R&B songs from the 90s",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["rnb", "R&B", "90s"]
+    },
+    {
+      "id": "A11",
+      "category": "genre",
+      "query": "Give me some experimental electronic music",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["experimental", "electronic"]
+    },
+    {
+      "id": "A12",
+      "category": "genre",
+      "query": "Show me great hip-hop from the 2000s",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["Hip-Hop", "hip hop", "rap"]
+    },
+    {
+      "id": "A13",
+      "category": "genre",
+      "query": "I want some folk music",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["folk", "singer-songwriter"]
+    },
+    {
+      "id": "A14",
+      "category": "genre",
+      "query": "Recommend some grunge tracks",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["grunge"]
+    },
+    {
+      "id": "A15",
+      "category": "genre",
+      "query": "Play me some R&B tracks",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["rnb", "R&B"]
+    },
+    {
+      "id": "A16",
+      "category": "genre",
+      "query": "Show me some dream pop tracks",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["dream pop"]
+    },
+    {
+      "id": "A17",
+      "category": "genre",
+      "query": "I want some soul music",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["soul"]
+    },
+    {
+      "id": "A18",
+      "category": "genre",
+      "query": "Give me some Britpop from the 90s",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["britpop", "british", "90s"]
+    },
+    {
+      "id": "A19",
+      "category": "genre",
+      "query": "Show me some post-rock",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["post-rock", "post rock"]
+    },
+    {
+      "id": "A20",
+      "category": "genre",
+      "query": "Recommend metalcore tracks",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["metalcore", "metal"]
+    },
+    {
+      "id": "B01",
+      "category": "mood",
+      "query": "Something calming for meditation",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["chill", "chillout", "relaxing", "ambient"]
+    },
+    {
+      "id": "B02",
+      "category": "mood",
+      "query": "Uplifting songs to start my day",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["uplifting", "happy"]
+    },
+    {
+      "id": "B03",
+      "category": "mood",
+      "query": "Music that feels nostalgic",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["80s", "90s", "nostalgic"]
+    },
+    {
+      "id": "B04",
+      "category": "mood",
+      "query": "Sad songs to cry to",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["sad", "melancholy", "melancholic"]
+    },
+    {
+      "id": "B05",
+      "category": "mood",
+      "query": "Energetic music to power through work",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["energetic", "upbeat"]
+    },
+    {
+      "id": "B06",
+      "category": "mood",
+      "query": "Something dark and atmospheric",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["dark", "atmospheric"]
+    },
+    {
+      "id": "B07",
+      "category": "mood",
+      "query": "Peaceful music for reflection",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["peaceful", "mellow", "calm"]
+    },
+    {
+      "id": "B08",
+      "category": "mood",
+      "query": "Songs that feel euphoric",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["euphoric", "dance", "trance"]
+    },
+    {
+      "id": "B09",
+      "category": "mood",
+      "query": "Angry music for when I'm frustrated",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["angry", "metal", "aggressive"]
+    },
+    {
+      "id": "B10",
+      "category": "mood",
+      "query": "Music with soulful vocals",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["soul", "rnb"]
+    },
+    {
+      "id": "B11",
+      "category": "mood",
+      "query": "Melancholic music to sit with",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["melancholy", "sad", "melancholic"]
+    },
+    {
+      "id": "B12",
+      "category": "mood",
+      "query": "Feel-good tracks that make me smile",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["feel good", "happy", "upbeat"]
+    },
+    {
+      "id": "B13",
+      "category": "mood",
+      "query": "Songs that sound romantic",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["romantic", "love"]
+    },
+    {
+      "id": "B14",
+      "category": "mood",
+      "query": "Tense, anxious music that builds up",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["dark", "atmospheric", "experimental"]
+    },
+    {
+      "id": "B15",
+      "category": "mood",
+      "query": "Music that feels lonely",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["sad", "melancholy", "lonely"]
+    },
+    {
+      "id": "B16",
+      "category": "mood",
+      "query": "Songs with jazz influences",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["jazz"]
+    },
+    {
+      "id": "B17",
+      "category": "mood",
+      "query": "Songs that sound triumphant",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["epic", "uplifting"]
+    },
+    {
+      "id": "B18",
+      "category": "mood",
+      "query": "Songs to relax you after a long day",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["chill", "ambient"]
+    },
+    {
+      "id": "B19",
+      "category": "mood",
+      "query": "Something dreamy and ethereal",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["dream pop", "shoegaze", "ethereal"]
+    },
+    {
+      "id": "B20",
+      "category": "mood",
+      "query": "Grunge tracks from the 90s",
+      "ground_truth_strategy": "tag_match",
+      "ground_truth_tags": ["grunge", "90s"]
+    },
+    {
+      "id": "C01",
+      "category": "compound",
+      "query": "Sad indie songs about heartbreak",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C02",
+      "category": "compound",
+      "query": "Aggressive metal for the gym",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C03",
+      "category": "compound",
+      "query": "Chill synthwave for late night driving",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C04",
+      "category": "compound",
+      "query": "Melancholic songs to listen to on a late-night walk",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C05",
+      "category": "compound",
+      "query": "Upbeat pop for a summer party",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C06",
+      "category": "compound",
+      "query": "Perfect no-lyric playlist for rainy days and coding",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C07",
+      "category": "compound",
+      "query": "Happy songs about getting over a situationship",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C08",
+      "category": "compound",
+      "query": "Motivating, high-beat metal playlist for the gym",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C09",
+      "category": "compound",
+      "query": "Flying to Spain, upbeat Spanish songs that are fun",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C10",
+      "category": "compound",
+      "query": "Music recommendations that mix pop and rock songs together",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C11",
+      "category": "compound",
+      "query": "Lo-fi hip-hop for studying late at night",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C12",
+      "category": "compound",
+      "query": "Dreamy shoegaze for lying in a field",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C13",
+      "category": "compound",
+      "query": "Dark trip-hop for a rainy Sunday",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C14",
+      "category": "compound",
+      "query": "Nostalgic 2000s pop-rock for a road trip",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C15",
+      "category": "compound",
+      "query": "Emotional post-rock for staring at the ceiling",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C16",
+      "category": "compound",
+      "query": "Chill reggae for a beach day",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C17",
+      "category": "compound",
+      "query": "Peaceful classical music for reading",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C18",
+      "category": "compound",
+      "query": "Fast punk rock for skateboarding",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C19",
+      "category": "compound",
+      "query": "Ambient electronic for a spa day",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "C20",
+      "category": "compound",
+      "query": "Melancholic jazz for a solo dinner",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "D01",
+      "category": "reference",
+      "query": "Recommend me the best songs from Radiohead and similar bands",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Radiohead"
+    },
+    {
+      "id": "D02",
+      "category": "reference",
+      "query": "New songs that sound like Taylor Swift's music",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Taylor Swift"
+    },
+    {
+      "id": "D03",
+      "category": "reference",
+      "query": "Songs from indie artists similar to boygenius",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "boygenius"
+    },
+    {
+      "id": "D04",
+      "category": "reference",
+      "query": "Playlist similar to Olivia Rodrigo's music but with British artists",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Olivia Rodrigo"
+    },
+    {
+      "id": "D05",
+      "category": "reference",
+      "query": "Recommend artists like Kendrick Lamar",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Kendrick Lamar"
+    },
+    {
+      "id": "D06",
+      "category": "reference",
+      "query": "Music similar to Frank Ocean",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Frank Ocean"
+    },
+    {
+      "id": "D07",
+      "category": "reference",
+      "query": "Songs in the style of Björk",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Björk"
+    },
+    {
+      "id": "D08",
+      "category": "reference",
+      "query": "Music like The National",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "The National"
+    },
+    {
+      "id": "D09",
+      "category": "reference",
+      "query": "Songs similar to Fleetwood Mac",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Fleetwood Mac"
+    },
+    {
+      "id": "D10",
+      "category": "reference",
+      "query": "In the style of Arctic Monkeys",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Arctic Monkeys"
+    },
+    {
+      "id": "D11",
+      "category": "reference",
+      "query": "Music like Kanye West's earlier albums",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Kanye West"
+    },
+    {
+      "id": "D12",
+      "category": "reference",
+      "query": "Songs similar to Mac DeMarco",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Mac DeMarco"
+    },
+    {
+      "id": "D13",
+      "category": "reference",
+      "query": "Music like Phoebe Bridgers",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Phoebe Bridgers"
+    },
+    {
+      "id": "D14",
+      "category": "reference",
+      "query": "In the style of Tame Impala",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Tame Impala"
+    },
+    {
+      "id": "D15",
+      "category": "reference",
+      "query": "Songs like Clairo",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Clairo"
+    },
+    {
+      "id": "D16",
+      "category": "reference",
+      "query": "Music like The Weeknd",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "The Weeknd"
+    },
+    {
+      "id": "D17",
+      "category": "reference",
+      "query": "Similar to Lana Del Rey",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Lana Del Rey"
+    },
+    {
+      "id": "D18",
+      "category": "reference",
+      "query": "Songs in the style of Talking Heads",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Talking Heads"
+    },
+    {
+      "id": "D19",
+      "category": "reference",
+      "query": "Music like Aphex Twin",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Aphex Twin"
+    },
+    {
+      "id": "D20",
+      "category": "reference",
+      "query": "Similar to Beach House",
+      "ground_truth_strategy": "similar_artists",
+      "reference_artist": "Beach House"
+    },
+    {
+      "id": "E01",
+      "category": "contextual",
+      "query": "Make me a fun playlist to listen to on my way to work in the morning",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E02",
+      "category": "contextual",
+      "query": "Getting ready for a night out with the girls, full of melodic pop songs",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E03",
+      "category": "contextual",
+      "query": "Pretend I am modeling for a Victoria's Secret fashion show",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E04",
+      "category": "contextual",
+      "query": "Best songs from 2000s romantic comedies",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E05",
+      "category": "contextual",
+      "query": "Going through a break-up, recommend songs to cry to",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E06",
+      "category": "contextual",
+      "query": "Music for cooking dinner at home",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E07",
+      "category": "contextual",
+      "query": "Playlist for a long-haul flight",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E08",
+      "category": "contextual",
+      "query": "Songs for a first date",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E09",
+      "category": "contextual",
+      "query": "Music for a house party with friends",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E10",
+      "category": "contextual",
+      "query": "Playlist for a road trip through the mountains",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E11",
+      "category": "contextual",
+      "query": "Music for a slow Sunday morning",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E12",
+      "category": "contextual",
+      "query": "Songs for a workout cool-down",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E13",
+      "category": "contextual",
+      "query": "Playlist for cleaning the house",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E14",
+      "category": "contextual",
+      "query": "Songs for waking up slowly and enjoying coffee",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E15",
+      "category": "contextual",
+      "query": "Music for painting or drawing",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E16",
+      "category": "contextual",
+      "query": "Playlist for winding down before bed",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E17",
+      "category": "contextual",
+      "query": "Songs for a wedding reception",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E18",
+      "category": "contextual",
+      "query": "Music for a solo cafe visit",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E19",
+      "category": "contextual",
+      "query": "Playlist for a beach day with friends",
+      "ground_truth_strategy": "llm_judge"
+    },
+    {
+      "id": "E20",
+      "category": "contextual",
+      "query": "Songs for a long car journey alone",
+      "ground_truth_strategy": "llm_judge"
+    }
+  ]
+}
