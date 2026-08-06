@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "run_at": "2026-08-05T17:23:31Z",
+    "n_queries": 100,
+    "baselines": [
+      "random",
+      "popularity",
+      "bm25",
+      "dense",
+      "rag"
+    ],
+    "k": 10,
+    "judge_model": "claude-haiku-4-5-20251001",
+    "elapsed_seconds": 4620.7
+  },
+  "tests": [
+    {
+      "comparison": "rag vs dense",
+      "metric": "ndcg_at_10",
+      "n_pairs": 100,
+      "mean_a": 0.875,
+      "mean_b": 0.695,
+      "t_stat": 4.8282,
+      "p_value": 5e-06,
+      "cohens_d": 0.4828,
+      "significant_at_0.05": true
+    },
+    {
+      "comparison": "rag vs bm25",
+      "metric": "ndcg_at_10",
+      "n_pairs": 100,
+      "mean_a": 0.875,
+      "mean_b": 0.68,
+      "t_stat": 3.7728,
+      "p_value": 0.000275,
+      "cohens_d": 0.3773,
+      "significant_at_0.05": true
+    },
+    {
+      "comparison": "rag vs popularity",
+      "metric": "ndcg_at_10",
+      "n_pairs": 100,
+      "mean_a": 0.875,
+      "mean_b": 0.375,
+      "t_stat": 9.2382,
+      "p_value": 0.0,
+      "cohens_d": 0.9238,
+      "significant_at_0.05": true
+    },
+    {
+      "comparison": "rag vs random",
+      "metric": "ndcg_at_10",
+      "n_pairs": 100,
+      "mean_a": 0.875,
+      "mean_b": 0.24,
+      "t_stat": 13.0535,
+      "p_value": 0.0,
+      "cohens_d": 1.3054,
+      "significant_at_0.05": true
+    },
+    {
+      "comparison": "dense vs bm25",
+      "metric": "ndcg_at_10",
+      "n_pairs": 100,
+      "mean_a": 0.695,
+      "mean_b": 0.68,
+      "t_stat": 0.2914,
+      "p_value": 0.771334,
+      "cohens_d": 0.0291,
+      "significant_at_0.05": false
+    },
+    {
+      "comparison": "dense vs popularity",
+      "metric": "ndcg_at_10",
+      "n_pairs": 100,
+      "mean_a": 0.695,
+      "mean_b": 0.375,
+      "t_stat": 5.2161,
+      "p_value": 1e-06,
+      "cohens_d": 0.5216,
+      "significant_at_0.05": true
+    }
+  ]
+}
