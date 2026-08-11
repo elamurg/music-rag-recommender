@@ -1,0 +1,39 @@
+Baseline: random  (query: 'Melancholic indie folk for late nights')
+----------------------------------------------------------------------
+ 1. Reach Down by Temple of the Dog
+ 2. I Shot The Devil by Suicidal Tendencies
+ 3. This Will Make You Love Again by IAMX
+ 4. Lovesick Girls by BLACKPINK
+ 5. Heat Miser by Massive Attack
+Baseline: popularity  (query: 'Melancholic indie folk for late nights')
+----------------------------------------------------------------------
+ 1. Creep by Radiohead
+ 2. Smells Like Teen Spirit by Nirvana
+ 3. Come as You Are by Nirvana
+ 4. Mr. Brightside by The Killers
+ 5. Poker Face by Lady Gaga
+Baseline: bm25  (query: 'Melancholic indie folk for late nights')
+----------------------------------------------------------------------
+baselines building BM25 index over corpus documents...
+BM25 index built over 9499 documents.
+ 1. Some Nights by fun.
+ 2. illicit affairs by Taylor Swift
+ 3. Beach Baby by Bon Iver
+ 4. The Charging Sky by Jenny Lewis with The Watson Twins
+ 5. Southern Nights by Glen Campbell
+Baseline: dense  (query: 'Melancholic indie folk for late nights')
+----------------------------------------------------------------------
+[retrieval] loading index: corpus.faiss
+[retrieval] loading model: sentence-transformers/all-MiniLM-L6-v2
+ 1. (Dream) by Salvia Palth
+ 2. The Winner Is by DeVotchKa
+ 3. The Approaching Night by Philip Wesley
+ 4. Anti-Western by Camera Obscura
+ 5. Marching Theme by Neutral Milk Hotel
+Baseline: rag  (query: 'Melancholic indie folk for late nights')
+----------------------------------------------------------------------
+ 1. (Dream) by Salvia Palth
+ 2. Melancholia II by William Basinski
+ 3. Marching Theme by Neutral Milk Hotel
+ 4. The Approaching Night by Philip Wesley
+ 5. Anti-Western by Camera Obscura
