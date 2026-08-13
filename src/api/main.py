@@ -50,7 +50,8 @@ app = FastAPI(
 #api endpoints
 @app.post("/recommend", response_model=RecommendResponse)
 def recommend(payload: RecommendRequest) -> RecommendResponse:
-    """generatee ranked recommendation for a natural-language query. 
+    """Generated ranked recommendation for a natural-language query. 
+    
     The pipeline follows: FAISS retrieval -> claude-sonnet-4.5 re-ranking and hallucionation guard
     -> spotify identity resolution -> reranked recommednations with justifications.
     If fails it returns top-N FAISS results with grounded = false."""

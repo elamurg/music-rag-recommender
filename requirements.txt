@@ -26,3 +26,5 @@ seaborn==0.13.2
 pylast==3.2.1
 lyricsgenius==3.0.1
 tokenizers==
+anthropic==
+rank-bm25==0.2.3

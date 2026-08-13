@@ -1,0 +1,51 @@
+
+# Virtual environments (rebuilt inside the container)
+.venv/
+venv/
+env/
+ 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+ 
+# Git — the container doesn't need history
+.git/
+.gitignore
+.github/
+ 
+# IDE / editor state
+.vscode/
+.idea/
+*.swp
+*.swo
+ 
+# OS junk
+.DS_Store
+Thumbs.db
+ 
+# Local secrets (mounted separately)
+.env
+.env.local
+ 
+# Data — mounted as volume at runtime, not baked into image
+data/
+ 
+# Docs and notes not needed at runtime
+*.md
+!README.md
+ 
+# Test artefacts
+.pytest_cache/
+.coverage
+htmlcov/
+ 
+# Jupyter notebooks (dev only)
+*.ipynb
+.ipynb_checkpoints/
+ 
+# PDFs / archives
+*.pdf
+*.zip
+*.tar.gz
