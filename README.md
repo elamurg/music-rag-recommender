@@ -1,220 +1,386 @@
-# Music RAG Recommender
+# SoundRAG
 
-**MSc Computer Science Thesis — Queen Mary University of London**
+**Retrieval-Augmented Music Recommendation for Cold-Start Users**
 
-Addressing the Cold-Start Problem in Spotify Music Recommendation Systems Using Retrieval-Augmented Generation and Natural Language Processing.
+MSc thesis project by **Ela Murgelj**, Queen Mary University of London, School of Electronic Engineering and Computer Science, MSc Computer Science (Conversion), 2025/26.
 
-Traditional music recommendation systems inherit a user-item vector-space design from collaborative filtering, in which each user and each item are represented by a vector learned from historical interaction data. This design produces a first-class engineering problem known as ***cold-start***: recommendations fail for new users and for new items. Common mitigations, such as popularity fallback, demographic feeling, onboarding questionnaires and content-based feature extraction from audio, each address a subset of the probelm at a cost of degraded personalisation, additional friction or dependence on data sources that are increasingly restricted. 
+Supervisor: Dr. Fabrizio Smeraldi.
 
-## System overview
+**Repository:** [https://github.com/elamurg/music-rag-recommender](https://github.com/elamurg/music-rag-recommender)
 
-SoundRAG comprises four layers, corresponding to the data flow from ingestion through recommendation delivery.
+---
 
-**Layer 1** — Knowledge. A structured corpus of music metadata, tags, artist information, and lyrics, sourced from Last.fm and Genius and stored in a normalised SQLite database. Built offline via an idempotent, resumable ingestion pipeline.
+## Overview
 
-**Layer 2** — Retrieval. A dense vector index (FAISS) over textual descriptions synthesised from the Layer 1 corpus. At query time, the user's natural-language input is embedded and used to retrieve the top-k most similar item descriptions.
+SoundRAG is an end-to-end music recommendation pipeline that solves the *user cold-start problem* — the well-documented failure mode of collaborative filtering when a new user arrives with no listening history. Instead of requiring interaction data, SoundRAG accepts natural-language preference queries (e.g. *"sad indie about heartbreak"* or *"chill synthwave for late night driving"*) and returns ranked, grounded recommendations with playable Spotify URLs.
 
-**Layer 3** — Generation. A large language model (Claude or GPT-4) receives the user query and the retrieved descriptions as context, and generates a ranked list of recommendations with grounded justifications drawn from the retrieved text.
+The system is architected as four layers:
 
-**Layer 4** — Identity resolution. Recommended track names and artists are resolved to Spotify identifiers via the (still-permitted) Spotify search endpoint, producing playable URLs for the end user.
+1. **Knowledge** — 9,499-track SQLite corpus enriched from Last.fm, Genius and Wikipedia.
+2. **Retrieval** — FAISS dense-vector index over sentence-transformer embeddings, returning top-20 candidates in under 10 ms.
+3. **Generation** — Claude Sonnet 4.5 re-ranks candidates and produces natural-language justifications, with a hallucination guard that rejects any recommendation not present in the retrieved set.
+4. **Identity resolution** — Spotify search + RapidFuzz fuzzy matching maps track names to playable URLs, with results cached in the corpus database.
 
-## Architecture Overview
-The deployed system is a RAG-enhanced recommendation engine that accepts natural language queried from cold-start users and returns ranked, explainable track recommendations. It operates as a containerised FastAPI service backed by a FAISS vector store and an LLM orchastrated via LangChain.
+The full system is deployed as a FastAPI REST service, containerised with Docker, and evaluated across 100 hand-crafted queries against four baselines (Random, Popularity, BM25, Dense-only). Full methodology and results are in the accompanying thesis (`EM_SoundRAG.docx`).
 
-## Layer 1: Knowledge
-**Purpose:** produces the corpus of textual descriptions that the retrival and generation layers depend on. Every track available to the recommender must appear in the corpus with sufficient descriptive text to be reasoned about.
+---
 
-## Data sources
+## Quick start by Docker
 
--> Last.fm — track metadata, crowdsourced tags with weights, listener statistics, wiki summaries, artist biographies, and pairwise track similarity from collaborative filtering signals.
--> Genius — song lyrics (retrieved via HTML scraping through the lyricsgenius library, since Genius's public API does not expose raw lyrics).
--> MusicBrainz — canonical identifiers (MBIDs) surfaced through Last.fm where available.
+The Docker deployment is the reference executable path per the handbook. It requires only Docker, Docker Compose, the `data/` directory (containing the SQLite corpus and FAISS index), and a `.env` file with API credentials.
 
-## Storage design
-The corpus is stored in a normalised SQLite database at `data/raw/corpus.db`. SQLite was chosen over a client-server RDBMS for its zero-configuration deployment, portability, and adequacy at the target corpus scale (approximately 10,000 tracks). The schema comprises six tables:
+```bash
+git clone https://github.com/elamurg/music-rag-recommender.git
+cd music-rag-recommender
 
-- `tracks` — one row per unique `(artist_name, name)` pair; holds metadata and enrichment fields (nullable until Phase 2 populates them). Enrichment progress is tracked via nullable timestamp columns (`enriched_at`, `lyrics_processed_at`), which double as boolean flags without requiring a separate state table.
-- `tags` — normalised tag names, case-insensitive via `COLLATE NOCASE`.
-- `track_tags` — many-to-many junction between tracks and tags, with a weight column recording Last.fm's tag popularity (0–100).
-- `artists` — separate table for per-artist enrichment (biographies, listener counts), populated in Phase 3 and soft-linked to `tracks.artist_name` by string rather than foreign key, due to inconsistencies in Last.fm's canonical artist naming.
-- `similar_tracks` — Last.fm's collaborative filtering signal, stored with target track name and artist as strings (rather than foreign keys) because target tracks may not be present in the corpus.
-- `lyrics` — one-to-optional-one with `tracks`; contains lyrics text, source URL, and retrieval timestamp.
+#Provide credentials (see "Environment variables" below)
+cp .env.example .env
+# ...edit .env with your keys...
 
-Foreign key constraints with `ON DELETE CASCADE` maintain referential integrity across the junction and dependent tables. The dedup key on `tracks` is `UNIQUE(artist_name, name)` rather than `mbid`, because MBIDs are absent for approximately 50% of Last.fm tracks and a UNIQUE constraint on nullable columns does not enforce uniqueness for null values in SQL.
-
-### Ingestion pipeline
-
-Ingestion is structured as four sequential phases, each independently idempotent and resumable:
-
-1. **Seed collection** — populate `tracks` with names and artists from a curated set of Last.fm tag pages and the global chart. Enrichment fields remain null.
-2. **Track enrichment** — for each seeded track, call `track.getInfo` and `track.getSimilar` on Last.fm; populate scalar enrichment fields, insert tag relationships, insert similar-track edges. `enriched_at` is stamped only when both API calls succeed.
-3. **Artist enrichment** — for each distinct artist in `tracks`, call `artist.getInfo`; populate `artists`.
-4. **Lyrics enrichment** — for each enriched track, query Genius for lyrics; insert into `lyrics`.
-
-Resumability is achieved through a two-part invariant: (1) every insert uses `INSERT OR IGNORE` or `INSERT OR REPLACE` to avoid duplicate-key crashes on re-runs, and (2) enrichment timestamps are stamped only within the same transaction as the corresponding data writes. If a phase is interrupted mid-run, subsequent invocations query for rows with null timestamps and process only those.
-
-### Rate limiting and error handling
-
-Last.fm's stated rate limit is 5 requests per second. The pipeline maintains a 0.25-second polite delay between API calls, corresponding to 4 requests per second — sufficient headroom to avoid throttling under normal network conditions.
-
-Transient failures trigger exponential backoff with three retries at 5s, 15s, and 45s intervals. Permanent failures (HTTP 404, invalid parameters, track-not-found) are recognised via error message classification and skipped immediately without retrying. This distinction is implemented via a decorator (`@retry`) applied to individual API-calling functions.
-
-### Module structure
-
-The Layer 1 codebase lives under `src/corpus/` and comprises the following modules:
-
-**`db.py`** — Database schema definition and connection management. Exports:
-- `SCHEMA`: multi-statement SQL string defining all six tables and their indexes.
-- `init_db()`: idempotent schema initialisation, safe to invoke on an existing database.
-- `get_conn()`: context manager providing a per-transaction SQLite connection with foreign keys enabled and dict-like row access.
-
-The schema is embedded as a string rather than an ORM to preserve legibility and simplify version control. Path resolution uses `pathlib` with `__file__`-relative computation, decoupling the database location from the caller's working directory.
-
-**`seeds.py`** — Phase 1 seed collection. Defines a curated list of 55 tags spanning genres, subgenres, moods, and eras; iterates through them via Last.fm's `tag.getTopTracks`; augments with the global chart via `chart.getTopTracks`. Uses `INSERT OR IGNORE` to make re-runs idempotent. Fresh database connections are opened per tag to minimise lock duration and to ensure a mid-tag crash preserves earlier tags' inserts.
-
-**`schemas.py`** — Typed data containers for parsed API responses. Uses `@dataclass` to define `TagInfo`, `SimilarTrackInfo`, and `TrackEnrichment` without boilerplate. Provides a normalised interface between the API layer and the database writer, avoiding direct dependence on the pylast object model in downstream code.
-
-**`lastfm_client.py`** — Last.fm API access with retry logic and response parsing. Defines the `@retry_on_transient` decorator, which wraps API-calling functions with exponential backoff for transient errors and immediate re-raise for permanent errors. Exports `fetch_track_info` and `fetch_similar_tracks` (decorated), and `parse_enrichment` for converting raw pylast objects into `TrackEnrichment` instances.
-
-**`enrich.py`** — Phase 2 batch orchestration. Queries the database for tracks with null `enriched_at`, iterates through them with a progress bar, and invokes the per-track worker `enrich_one_track` for each. The worker fetches, parses, and writes in a single database transaction, stamping `enriched_at` only on full success. Failures are logged and the track is skipped, remaining unenriched for future runs.
-
-**`__init__.py`** — Marks `src/corpus/` as a Python package; carries a package-level docstring.
-
-### Module dependency structure
-
-```
-enrich.py       ─── depends on ──▶  lastfm_client.py, schemas.py, db.py
-seeds.py        ─── depends on ──▶  db.py
-lastfm_client.py─── depends on ──▶  schemas.py
-schemas.py      ─── depends on ──▶  (standard library only)
-db.py           ─── depends on ──▶  (standard library only)
+#Build the image and start the service
+docker compose up --build
 ```
 
-Dependencies flow in one direction, from orchestration modules toward foundational modules. `db.py` and `schemas.py` have no internal dependencies and are consumed by all other modules. This structure permits testing the API and database layers independently of one another.
+The first build takes 5–10 minutes as it downloads base images and compiles dependencies (PyTorch, faiss-cpu, sentence-transformers). Subsequent builds use cached layers and complete in ~30 seconds.
 
-## Layer 2: Retrieval
-### Purpose
+Once the service is running:
 
-Layer 2 converts the descriptive text produced in Layer 1 into a dense vector representation, and provides fast approximate-nearest-neighbour retrieval over that representation for arbitrary text queries.
+- **Interactive API docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health check:** `curl http://localhost:8000/health`
+- **Example recommendation:**
 
-### Planned design
+```bash
+curl -X POST http://localhost:8000/recommend \
+  -H "Content-Type: application/json" \
+  -d '{"query": "sad indie about heartbreak", "n": 5}'
+```
 
-Each track will be represented by a single document synthesised from its Layer 1 enrichment fields: tags (concatenated and weighted by frequency), artist biography, wiki summary, and a lyrics excerpt. This document will be embedded via a sentence transformer (candidate models: `sentence-transformers/all-MiniLM-L6-v2` for baseline speed, `BAAI/bge-large-en` for higher retrieval quality) into a fixed-dimensional vector.
+Full API documentation is provided in **Appendix E** of the thesis.
 
-Vectors will be stored in a FAISS index, keyed by the track's SQLite `id`. FAISS was selected for its production-grade performance, native support for approximate search (necessary at corpus sizes beyond ~100k), and mature Python bindings. The index will use an inverted-file structure with product quantisation (`IndexIVFPQ`) to balance memory footprint against retrieval accuracy at the target corpus scale.
+---
 
-At query time, the pipeline will embed the user query with the same encoder, query the FAISS index for the top-k nearest neighbours, and issue a batch `SELECT` against SQLite using the returned track IDs to materialise the full descriptive text for each hit.
+## Repository structure
 
-Hybrid retrieval combining dense (FAISS) and sparse (BM25 via `rank_bm25`) signals will be evaluated as an extension, with reciprocal rank fusion for signal combination.
+```
+music-rag-recommender/
+├── src/
+│   ├── corpus/              # Layer 1: SQLite corpus + ingestion pipeline
+│   │   └── schema_changes/  # Idempotent SQL migrations
+│   ├── embedding/           # Layer 2 (offline): text synthesis + FAISS index
+│   ├── retrieval/           # Layer 2 (online): query pipeline
+│   ├── generation/          # Layer 3: LLM re-ranking + hallucination guard
+│   ├── resolution/          # Layer 4: Spotify identity resolution
+│   ├── evaluation/          # 100-query evaluation framework
+│   └── api/                 # FastAPI REST service
+├── docs/
+│   ├── architecture.md      # System-level design notes
+│   ├── roadmap.md           # Phase-by-phase build log
+│   ├── evaluation/
+│   │   └── queries.json     # 100 evaluation queries (5 categories)
+│   └── example_queries/     # Saved outputs from demonstration queries
+├── data/
+│   ├── raw/corpus.db        # SQLite corpus (~200 MB, git-ignored)
+│   ├── embeddings/          # FAISS index (~14 MB, git-ignored)
+│   └── evaluation/          # results.json, summary.json, significance.json, CSV
+├── Dockerfile               # Multi-stage build (builder + runtime)
+├── docker-compose.yml       # Local deployment
+├── .dockerignore
+├── .env.example             # Credentials template
+├── requirements.txt
+├── README.md                # This file
+└── EM_SoundRAG.docx         # Accompanying thesis document
+```
 
-### Planned modules
+---
 
-- `src/retrieval/embed.py` — offline embedding of the Layer 1 corpus.
-- `src/retrieval/index.py` — FAISS index construction and persistence.
-- `src/retrieval/query.py` — query-time embedding and nearest-neighbour retrieval.
+## File-by-file reference
 
-## Layer 3: Generation
-### Purpose
+Detailed per-file descriptions organised by the four architectural layers.
 
-Layer 3 converts a set of retrieved track descriptions into a ranked, justified recommendation. The LLM's role is not to generate recommendations from parametric knowledge — which would risk hallucinated track names and unverifiable claims — but to reason over the passages provided by Layer 2 and select the most appropriate subset for the user's query.
+### Layer 1 — Knowledge (`src/corpus/`)
 
-### Planned design
+The ingestion pipeline that builds the SQLite corpus from external APIs. Each phase is idempotent and can be safely interrupted and resumed.
 
-The prompt structure will follow standard grounded-generation practice: a system message defining the recommender's role and constraints (e.g. "only recommend tracks present in the provided context"), the user's query, and the retrieved passages formatted with track identifiers. The model will be instructed to return structured output (JSON) listing recommended track IDs and per-track natural-language justifications derived from the passages.
+| File | Description |
+|---|---|
+| `db.py` | SQLite connection management via a `get_conn()` context manager, with `row_factory` configured for dict-like column access. All other modules consume this rather than opening raw connections. |
+| `seeds.py` | Phase 1: seed track collection from Last.fm's tag chart API, iterating over ~55 seed tags to build a genre-balanced starting corpus of ~9,500 tracks. |
+| `enrich.py` | Phase 2: per-track enrichment via Last.fm's `track.getInfo` and `track.getSimilar` endpoints, populating tags, listener counts and the similar-tracks graph used for evaluation ground truth. |
+| `enrich_artists.py` | Phase 3: artist biography enrichment via the `wikipedia-api` Python library, pulling ~3,174 unique artist biographies to support retrieval documents when track-level context is thin. |
+| `enrich_lyrics.py` | Phase 4: lyrics ingestion via the `lyricsgenius` library, with RapidFuzz-based title validation at 85% confidence to filter false-positive matches (achieves 90.3% coverage across the corpus). |
+| `lastfm_client.py` | Thin wrapper around `pylast` with exponential-backoff retry, respecting Last.fm's five-requests-per-second policy. |
+| `genius_client.py` | Wrapper around `lyricsgenius` adding retry logic and title-match validation before persisting a lyrics row. |
+| `retry.py` | Generic retry decorator with exponential backoff, used by all API-facing modules to survive transient failures without losing progress. |
+| `schemas.py` | Pydantic dataclasses for external API responses (Last.fm track, Genius song, Wikipedia article), providing type-safe parsing between wire format and the SQLite schema. |
 
-Candidate models include Claude 3.5 Sonnet, GPT-4o, and (for local-deployment evaluation) Llama 3.1 8B via Ollama. Selection will be driven by retrieval-recommendation alignment metrics and cost per query.
+#### Schema migrations (`src/corpus/schema_changes/`)
 
-Guard rails against hallucination will include structured output validation (recommended track IDs must exist in the retrieved set) and a fallback path that returns the top-k retrieved tracks unmodified if the LLM's output cannot be validated.
+Idempotent additive migrations. Each script uses `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS` so it can be re-run safely against an existing database.
 
-### Planned modules
+| File | Description |
+|---|---|
+| `add_artist_tags.py` | Creates the `artist_tags` many-to-many join table that maps artists to tags with weights, addressing the sparse coverage of track-level tags on Last.fm. |
+| `add_track_documents.py` | Creates the `track_documents` table storing the synthesised per-track passages used as inputs to the sentence-transformer encoder. |
+| `add_spotify_matches.py` | Creates the `spotify_matches` cache table storing Spotify URL, confidence score and resolved-at timestamp per corpus track_id, so repeat recommendations do not re-query the Spotify API. |
+| `add_judge_cache.py` | Creates the `judge_cache` table for the LLM-as-judge evaluation results, keyed on `(query_id, track_id, model)` so re-running evaluation after a code change is free. |
 
-- `src/generation/prompt.py` — prompt templates and structured output schemas.
-- `src/generation/llm.py` — model invocation with retry and validation logic.
+### Layer 2 — Retrieval (`src/embedding/` and `src/retrieval/`)
 
-## Layer 4: Identity resolution
-### Purpose
+The retrieval layer straddles offline and online modes. Documents are synthesised and embedded offline; the query is embedded and matched online against the pre-built FAISS index.
 
-Layer 4 converts the LLM's recommended track and artist names into Spotify track identifiers, producing URLs that the end user can click to play the recommendation.
+| File | Description |
+|---|---|
+| `embedding/synthesise.py` | Assembles a per-track text document from tags, Wikipedia content, artist biography and lyrics excerpt using the tag-forward template (top-3 tags amplified via repetition), with artist-tag fallback lifting coverage from 27% to 99% of tracks. |
+| `embedding/embed.py` | Loads `sentence-transformers/all-MiniLM-L6-v2`, encodes all synthesised documents to 384-dimensional embeddings with L2 normalisation, and builds a FAISS `IndexFlatIP` wrapped in `IndexIDMap2` so each vector carries its corpus track_id. |
+| `retrieval/query.py` | Query-time retrieval: the `retrieve(query, k)` function caches the model and FAISS index at module load, encodes the incoming query in the same vector space as the corpus, and returns the top-k `TrackHit` objects with pre-loaded metadata for downstream LLM consumption. |
 
-### Planned design
+### Layer 3 — Generation (`src/generation/`)
 
-Each recommended track will be queried against Spotify's `sp.search()` endpoint with a query string composed from the track name and primary artist name. The top result's URI will be treated as the resolution match, with a confidence threshold based on string similarity to the LLM's output to guard against incorrect matches.
+The LLM re-ranking layer. Takes retrieval candidates and produces the final ranked recommendations with grounded natural-language justifications.
 
-Resolution failures (no Spotify hit, or hit below confidence threshold) will be surfaced in the recommendation output as text-only results, without a playable link.
+| File | Description |
+|---|---|
+| `prompt.py` | Prompt templates and Pydantic schemas: `Recommendation` (track_id, justification, spotify_url, spotify_confidence) and `RecommendationResponse` (list of recommendations, grounded flag). The prompt instructs Claude to select tracks only from the retrieved set and to justify each pick using retrieved-passage facts. |
+| `generate.py` | Full generation pipeline: calls Claude Sonnet 4.5 via the `anthropic` Python SDK, validates the JSON response against the Pydantic schema, filters out any hallucinated track_ids, and falls back to top-k FAISS results (with `grounded=False`) if the LLM call fails or produces unusable output. |
 
-### Planned modules
+### Layer 4 — Identity Resolution (`src/resolution/`)
 
-- `src/resolution/spotify.py` — Spotify search and URL construction.
+Maps recommended tracks back to playable Spotify URLs. The Spotify API is used solely for identity resolution — never for recommendation itself.
 
-## API surface
+| File | Description |
+|---|---|
+| `spotify.py` | Spotify Web API search + RapidFuzz `token_set_ratio` fuzzy matching at 85% combined threshold across track and artist names. Results are cached in the `spotify_matches` table so subsequent recommendations of the same track return instantly, and no-match results are also cached to avoid retrying hopeless lookups. |
 
-The complete system will be exposed as a FastAPI application with a single primary endpoint:
+### Evaluation framework (`src/evaluation/`)
 
-- `POST /recommend` — accepts a user query and returns ranked recommendations with justifications and Spotify URLs.
+Runs every baseline against every query, computes metrics, aggregates by category, and runs paired significance tests. Full evaluation of 100 queries against 5 baselines takes ~30 minutes.
 
-Additional endpoints for corpus statistics, retrieval-only queries, and health checks will support evaluation and monitoring.
+| File | Description |
+|---|---|
+| `queries.py` | Loads `docs/evaluation/queries.json` into typed `EvalQuery` instances and dispatches to the correct ground-truth resolver based on strategy (`tag_match` for genre/mood queries, `similar_artists` for reference queries, `llm_judge` deferred to `judge.py` for compound/contextual queries). |
+| `baselines.py` | Implements five baseline retrievers with a shared interface. `Random` (metric floor), `Popularity` (top listener_count), `BM25` (sparse Okapi retrieval over synthesised documents with module-level index caching), `Dense-only` (FAISS without LLM re-ranking) and `RAG` (full SoundRAG pipeline). |
+| `metrics.py` | Pure-math implementations of Precision@k, Recall@k, NDCG@k (with binary and graded variants), MRR and Hit@k. Includes a `compute_all_metrics()` convenience function that dispatches based on whether ground truth is a relevant set or a graded score dict. |
+| `judge.py` | LLM-as-judge for subjective queries using Claude Haiku 4.5 (cheaper than Sonnet and different from the generator to reduce self-evaluation bias). Batches 10 tracks per API call and caches every judgment in `judge_cache` keyed by `(query_id, track_id, model)`. |
+| `run.py` | Evaluation orchestrator with `tqdm` progress reporting. Executes every baseline against every query, aggregates metrics per category and overall, runs paired t-tests for key baseline comparisons, and writes JSON, CSV and significance outputs to `data/evaluation/`. |
 
-Deployment will target Docker (`Dockerfile` and `docker-compose.yml` at repository root) with Kubernetes manifests under `k8s/` for later cloud deployment if required.
+### API service (`src/api/`)
 
-# Appendix: Implementation Log
+Thin REST layer wrapping the underlying pipeline. All business logic lives in the layer modules; this layer only translates between HTTP and Python.
 
-The following notes are not part of the formal architecture and are retained as a personal learning record for later review and thesis reflection.
+| File | Description |
+|---|---|
+| `main.py` | FastAPI application exposing three endpoints (`POST /recommend`, `GET /health`, `GET /stats`) with a lifespan warmup that pre-loads the retrieval model and FAISS index at startup, avoiding a ~5-second first-request latency spike. |
+| `schemas.py` | Pydantic request/response models (`RecommendRequest`, `RecommendResponse`, `RecommendationItem`, `HealthResponse`, `StatsResponse`) driving both incoming validation and the auto-generated OpenAPI documentation at `/docs`. |
 
-## `db.py`
+### Documentation (`docs/`)
 
-The schema string was written to be declarative and self-documenting, so that the SQL itself functions as documentation of the data model. Embedding SQL as a Python string rather than using an ORM (SQLAlchemy, etc.) was a deliberate choice to keep the codebase minimal at thesis scale and to preserve one-to-one correspondence between the schema code and the actual database structure.
+| File | Description |
+|---|---|
+| `architecture.md` | Formal four-layer architecture document with per-file implementation logs, referenced from the thesis Methodology chapter. |
+| `roadmap.md` | Phase-by-phase build log tracking design decisions, tradeoffs considered, and the rationale for each choice. Useful for the viva as a reference to defend design choices. |
+| `evaluation/queries.json` | The 100 evaluation queries, stratified as 20 per category across Genre (A), Mood (B), Compound (C), Reference (D) and Contextual (E). Each query specifies its ground-truth strategy (`tag_match`, `similar_artists`, or `llm_judge`) and associated tags or reference artist. |
+| `example_queries/` | Saved terminal outputs from the demonstration queries used throughout the thesis (`sad_indie_final.txt`, `synthwave_driving.txt`, etc.), providing reproducible reference outputs. |
 
-Points internalised while writing this module:
+### Deployment infrastructure (root)
 
-- SQLite dynamic typing: `TEXT`, `INTEGER`, and `TIMESTAMP` are storage hints, not enforced types. This differs from PostgreSQL and MySQL and requires care when relying on type coercion.
-- Foreign keys are disabled by default in SQLite for historical compatibility. The `PRAGMA foreign_keys = ON` statement must be issued per connection, and it is easy to omit — silently allowing orphan rows.
-- `INTEGER PRIMARY KEY AUTOINCREMENT` prevents ID reuse across delete operations, which matters for a corpus that may be pruned and re-ingested.
-- Composite `UNIQUE` constraints are declared at the table level, not the column level, and treat null values as non-colliding — hence the choice of `(artist_name, name)` over `mbid` as the dedup key.
-- The `@contextmanager` decorator from `contextlib` enables clean transactional semantics with substantially less boilerplate than the equivalent class-based `__enter__`/`__exit__` implementation.
-- `pathlib.Path` operations (`.parent`, `/`, `.resolve()`) are the modern replacement for `os.path` string manipulation and produce more legible code.
+| File | Description |
+|---|---|
+| `Dockerfile` | Multi-stage build: a `builder` stage installs Python dependencies into a virtualenv using `build-essential` and gcc; a lean `runtime` stage copies only the virtualenv and application code, keeping the final image at ~600 MB rather than ~2 GB. Runs as a non-root `appuser` for security hardening. |
+| `docker-compose.yml` | One-command local deployment that mounts `data/` as a read-only volume, injects credentials from `.env`, exposes port 8000, and configures a health check hitting the `/health` endpoint. The corpus is mounted rather than baked into the image so it can be swapped without rebuilding. |
+| `.dockerignore` | Excludes virtual environments, git history, IDE state, and `data/` directory from the Docker build context, keeping build times fast and preventing accidental credential leaks into the image. |
+| `.env.example` | Template file listing all required environment variables with placeholder values, checked into git as a starting point for new developers. Real credentials go into `.env` which is git-ignored. |
+| `requirements.txt` | Pinned Python dependencies including `fastapi`, `uvicorn`, `anthropic`, `sentence-transformers`, `faiss-cpu`, `spotipy`, `rapidfuzz`, `rank-bm25`, `scipy` and `pydantic`. Pinned to specific versions for reproducibility. |
+| `EM_SoundRAG.docx` | The accompanying MSc dissertation research paper containing full methodology, evaluation and discussion. |
 
-## `seeds.py`
+---
 
-The tag list was hand-curated rather than fetched from Last.fm's `network.get_top_tags()` in order to guarantee reproducibility: a re-run of the ingestion at a future date will produce a corpus drawn from the same tag distribution, which is a prerequisite for reproducible thesis results.
+## Environment variables
 
-Points internalised while writing this module:
+The service reads all credentials from a `.env` file at the project root. Copy `.env.example` and fill in your own values.
 
-- Rate limiting can be adequately handled with a fixed `time.sleep()` between calls; adaptive backoff is unnecessary for well-behaved APIs at thesis-scale request volumes.
-- Fresh database connections per outer-loop iteration are preferred over a single long-lived connection: they minimise the duration of write locks on the SQLite file and localise the blast radius of a mid-loop crash.
-- `INSERT OR IGNORE` combined with a `UNIQUE` schema constraint gives idempotent inserts with no application-level dedup logic.
-- Named constants at module scope (`TRACKS_PER_TAG`, `POLITE_DELAY_SEC`) improve legibility over inline magic numbers and simplify tuning.
-- The `if __name__ == "__main__":` idiom allows a single file to function as both an importable library and a runnable script.
+| Variable                | Purpose                                             | Obtain from                                                                 |
+|-------------------------|-----------------------------------------------------|-----------------------------------------------------------------------------|
+| `ANTHROPIC_API_KEY`     | Claude Sonnet 4.5 (generation) + Haiku 4.5 (judge)  | [console.anthropic.com](https://console.anthropic.com/) → API Keys          |
+| `SPOTIFY_CLIENT_ID`     | Spotify Web API identity resolution                 | [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard/) |
+| `SPOTIFY_CLIENT_SECRET` | Spotify Web API secret                              | [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard/) |
+| `LASTFM_API_KEY`        | Last.fm API (offline corpus ingestion only)         | [last.fm/api/account/create](https://www.last.fm/api/account/create)        |
+| `GENIUS_ACCESS_TOKEN`   | Genius API (offline lyrics ingestion only)          | [genius.com/api-clients](https://genius.com/api-clients)                    |
 
-## `schemas.py`
+**For running the deployed API only** (i.e. serving recommendations from the pre-built corpus), you need `ANTHROPIC_API_KEY`, `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`. The Last.fm and Genius keys are only needed if you want to rebuild the corpus from scratch.
 
-Dataclasses provide a lightweight way to give parsed API responses a stable typed shape without invoking the full class-boilerplate mechanism. This decouples the database write path from the pylast object model, which uses lazy attribute access and can trigger additional network calls if raw pylast objects are held past the initial fetch.
+**Approximate API cost per query:** ~$0.005 (Claude Sonnet). Free within Anthropic's initial credit allocation.
 
-Points internalised while writing this module:
+---
 
-- `@dataclass` auto-generates `__init__`, `__repr__`, and `__eq__` methods from field declarations.
-- Mutable default values must be created via `field(default_factory=list)` rather than `= []`, to avoid the classic Python foot-gun of shared mutable state across instances.
-- Optional fields are declared as `T | None` (Python 3.10+ union syntax) with default `None`, making it explicit at the type level which fields may be absent.
+## Running the service
 
-## `lastfm_client.py`
+### Option 1 — Docker (reproducible)
 
-The retry decorator was written to separate cross-cutting error handling from business logic. Every API-facing function in the module can opt into retry semantics with a single `@retry_on_transient` line, and the retry policy itself is defined once.
+```bash
+docker compose up --build       # build + start (foreground)
+docker compose up -d            # background mode
+docker compose logs -f          # follow logs
+docker compose down             # stop and remove
+```
 
-Points internalised while writing this module:
+### Option 2 — Local Python (development)
 
-- Decorators are functions that take a function and return a modified version of it. The `@decorator` syntax is syntactic sugar for `f = decorator(f)`.
-- Closures allow the inner `wrapper` function to reference the outer `fn` argument after the outer function has returned. This is fundamental to how decorators work.
-- `functools.wraps(fn)` copies name and docstring metadata from the wrapped function to the wrapper. Without it, tracebacks and introspection tools report `wrapper` for every decorated function, which severely degrades debuggability.
-- Distinguishing transient from permanent errors requires domain-specific classification. In Last.fm's case, `pylast.WSError.details` contains parseable error strings ("track not found", etc.) that reliably indicate permanence.
-- `Callable[..., T]` type hints (with `T = TypeVar("T")`) allow decorators to preserve the wrapped function's return type in the type checker's view.
+For development you can bypass Docker and run directly:
 
-## `enrich.py`
+```bash
+# Python 3.11 required
+python -m venv .venv
+source .venv/bin/activate       # or .venv\Scripts\activate on Windows
+pip install -r requirements.txt
 
-The per-track worker (`enrich_one_track`) and the batch orchestrator (`main`) are deliberately separated. The worker takes a single track and returns success or failure; it knows about Last.fm and the database. The orchestrator knows about progress bars, rate limiting, and loop iteration; it does not know anything about Last.fm's error taxonomy. This separation enables independent testing and reduces the surface area of each function.
+# Start the service
+uvicorn src.api.main:app --reload --port 8000
+```
 
-Points internalised while writing this module:
+Warmup takes ~5 seconds while the sentence-transformer model and FAISS index load.
 
-- The `enriched_at` timestamp is stamped inside the same transaction as the data writes. This is the mechanism that enforces the coarse-resumability invariant: a partial write followed by a crash leaves the timestamp null, and the next run re-processes the track cleanly.
-- `INSERT OR REPLACE` on `track_tags` and `similar_tracks` allows a re-run to refresh tag weights and similarity scores if Last.fm's data has updated, without accumulating stale-plus-new duplicates.
-- `COALESCE(?, mbid)` in the `UPDATE` statement preserves an existing MBID against a null overwrite from a re-run, protecting good data against a bad refetch.
-- `tqdm`'s `set_postfix` method enables live counters on the progress bar without breaking its formatting, which is useful for surfacing skip counts during a long run.
-- Structuring the failure path as `(success: bool, error: str | None)` rather than raising exceptions from the worker keeps the orchestrator's control flow linear and avoids the need for try/except around every worker call.
+### Testing the endpoints
+
+Interactive Swagger UI is served automatically at [http://localhost:8000/docs](http://localhost:8000/docs). Alternatively:
+
+```bash
+# Health check (returns component readiness)
+curl http://localhost:8000/health
+
+# Corpus statistics
+curl http://localhost:8000/stats
+
+# Recommendation
+curl -X POST http://localhost:8000/recommend \
+  -H "Content-Type: application/json" \
+  -d '{"query": "melancholic music for a rainy walk", "n": 5}'
+```
+
+Full API contract (request/response schemas, status codes, error handling) is documented in **Appendix E** of the thesis.
+
+---
+
+## Reproducing the evaluation
+
+The full 100-query evaluation from the thesis can be re-run against the pre-built corpus:
+
+```bash
+#Verify environment
+python -c "from src.corpus.db import get_conn; \
+    print(get_conn().execute('SELECT COUNT(*) FROM tracks').fetchone()[0])"
+#Expected output: 9506
+
+#Smoke test: 10 random queries across all 5 baselines
+python -m src.evaluation.run --sample 10
+
+#Full 100-query evaluation
+python -m src.evaluation.run
+```
+
+The full run takes approximately 30 minutes and costs ~$2–3 in Anthropic API credits (Claude Haiku judgments are cached in `judge_cache`, so re-runs are free). Output is written to:
+
+```
+data/evaluation/
+├── results.json          # per-query per-baseline detail
+├── summary.json          # aggregated metrics by baseline and category
+├── significance.json     # paired t-tests (SoundRAG vs each baseline)
+└── results.csv           # pandas-friendly flat file
+```
+
+To evaluate a single category:
+
+```bash
+python -m src.evaluation.run --category genre
+python -m src.evaluation.run --category compound
+```
+
+To run individual baselines against a query interactively:
+
+```bash
+python -m src.evaluation.baselines "sad indie about heartbreak" -k 5 --baseline all
+```
+
+---
+
+## Rebuilding the corpus from scratch (advanced)
+
+If you need to reproduce the corpus rather than use the pre-built one, the four ingestion phases run in sequence. Each is idempotent (safe to interrupt and resume). Total wall-clock time is approximately 40 hours end-to-end due to API rate limits.
+
+```bash
+#Phase 1: Seed track collection (~30 seconds)
+python -m src.corpus.seeds
+
+#Phase 2: Track enrichment — Last.fm metadata + similar tracks (~17 hours)
+python -m src.corpus.enrich
+
+#Phase 3: Artist enrichment — Wikipedia biographies
+python -m src.corpus.enrich_artists
+
+#Phase 4: Lyrics ingestion — Genius API (~13.5 hours)
+python -m src.corpus.enrich_lyrics
+
+#Text synthesis
+python -m src.embedding.synthesise
+
+#FAISS index construction
+python -m src.embedding.embed
+```
+
+The ingestion is network-bound (respecting Last.fm's five-requests-per-second policy and Genius's rate limits) rather than CPU-bound; it runs comfortably on a laptop but should be kicked off as an overnight job.
+
+---
+
+## Documentation and references
+
+| Document                          | Location                                         |
+|-----------------------------------|--------------------------------------------------|
+| Thesis (research paper)           | `EM_SoundRAG.docx`                               |
+| System architecture               | `docs/architecture.md`                           |
+| Phase-by-phase build log          | `docs/roadmap.md`                                |
+| 100 evaluation queries            | `docs/evaluation/queries.json`                   |
+| Example query outputs             | `docs/example_queries/`                          |
+| API endpoint documentation        | Thesis Appendix E                                |
+| Corpus schema and ER diagram      | Thesis Appendix B                                |
+| Embedding model specification     | Thesis Appendix D                                |
+| Generative AI usage declaration   | Thesis Appendix A                                |
+
+---
+
+## Requirements
+
+- Docker + Docker Compose (recommended path) *or* Python 3.11 (local path)
+- ~1 GB disk space (corpus + FAISS index + Docker image)
+- Internet connection (API calls to Anthropic and Spotify at inference time)
+- Anthropic API credit (~$5 covers development and evaluation)
+
+Key Python dependencies (see `requirements.txt` for full list):
+
+- `fastapi`, `uvicorn` — REST service
+- `anthropic` — Claude API client
+- `sentence-transformers` — MiniLM-L6-v2 embeddings
+- `faiss-cpu` — vector index
+- `spotipy` — Spotify Web API
+- `rapidfuzz` — fuzzy string matching for identity resolution
+- `rank-bm25` — sparse retrieval baseline
+- `scipy` — paired t-tests for statistical significance
+- `pydantic` — schema validation
+
+---
+
+## License
+
+The source code in this repository is released under the MIT License for academic and non-commercial research purposes. Third-party data accessed via API (Last.fm tags and similarity graph, Genius lyrics excerpts, Wikipedia artist biographies, Spotify metadata) is subject to the respective terms of service of each provider. Lyrics excerpts are stored for retrieval-augmentation only and are not displayed verbatim to end users.
+
+---
+
+## Citation
+
+If you build on this work, please cite:
+
+> Murgelj, E. (2026) *SoundRAG: A Retrieval-Augmented Approach to Cold-Start Music Recommendation*. MSc dissertation, Queen Mary University of London.
+
+---
+
+## Contact
+
+For questions about the code, evaluation reproduction or thesis content, please open an issue on the GitHub repository or contact the author through the university.

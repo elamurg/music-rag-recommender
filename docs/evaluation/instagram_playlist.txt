@@ -1,0 +1,64 @@
+Baseline: random  (query: 'Melodic slow songs to post on instagram that compliment a sunset photo with lyrics saying you have moved on from the breakup')
+----------------------------------------------------------------------
+ 1. Magic (feat. Rivers Cuomo) by B.o.B
+ 2. Rooster (2022 Remaster) by Alice in Chains
+ 3. Aquamarine by Addison Rae
+ 4. Yo Voy (Feat. Daddy Yankee) by Zion & Lennox
+ 5. Sunglasses by Black Country, New Road
+ 6. With You by Chris Brown
+ 7. Katy on a Mission by Katy B
+ 8. Yes I Know by Memory Tapes
+ 9. You Could Feel the Sky by Boards of Canada
+10. Until the Day I Die by Story Of The Year
+Baseline: popularity  (query: 'Melodic slow songs to post on instagram that compliment a sunset photo with lyrics saying you have moved on from the breakup')
+----------------------------------------------------------------------
+ 1. Creep by Radiohead
+ 2. Smells Like Teen Spirit by Nirvana
+ 3. Come as You Are by Nirvana
+ 4. Mr. Brightside by The Killers
+ 5. Poker Face by Lady Gaga
+ 6. Yellow by Coldplay
+ 7. Viva la Vida by Coldplay
+ 8. No Surprises by Radiohead
+ 9. Billie Jean by Michael Jackson
+10. In the End by Linkin Park
+Baseline: bm25  (query: 'Melodic slow songs to post on instagram that compliment a sunset photo with lyrics saying you have moved on from the breakup')
+----------------------------------------------------------------------
+baselines building BM25 index over corpus documents...
+BM25 index built over 9499 documents.
+ 1. Have A Drink On Me by The Orchestral Academy Of Los Angeles
+ 2. Sleepwalker by Parkway Drive
+ 3. On The Bird In The Cage by Have Heart
+ 4. I Don't Love by Have a Nice Life
+ 5. Brotherly Love by Have Heart
+ 6. Holiday by The Get Up Kids
+ 7. All I Want by A Day to Remember
+ 8. Hard Bark On The Family Tree by Have Heart
+ 9. Action & Action by The Get Up Kids
+10. Apple by Charli xcx
+Baseline: dense  (query: 'Melodic slow songs to post on instagram that compliment a sunset photo with lyrics saying you have moved on from the breakup')
+----------------------------------------------------------------------
+[retrieval] loading index: corpus.faiss
+[retrieval] loading model: sentence-transformers/all-MiniLM-L6-v2
+ 1. Love in the Dark by Adele
+ 2. broken by lovelytheband
+ 3. Youth by Daughter
+ 4. blue by yung kai
+ 5. Raindrops by Shamrain
+ 6. Sky Might Fall by Kid Cudi
+ 7. How Did It End? by Taylor Swift
+ 8. How Many Drinks? by Miguel
+ 9. Daylight by Taylor Swift
+10. I Fall Apart by Post Malone
+Baseline: rag  (query: 'Melodic slow songs to post on instagram that compliment a sunset photo with lyrics saying you have moved on from the breakup')
+----------------------------------------------------------------------
+ 1. Love in the Dark by Adele
+ 2. Daylight by Taylor Swift
+ 3. Youth by Daughter
+ 4. I Fall Apart by Post Malone
+ 5. How Did It End? by Taylor Swift
+ 6. blue by yung kai
+ 7. To Leave by Shamrain
+ 8. Raindrops by Shamrain
+ 9. Floating Through Space by Sia
+10. RotatingBed by Bones
