@@ -62,7 +62,7 @@ def recommend(payload: RecommendRequest) -> RecommendResponse:
             detail="retrieval returned no candidates. Corpus or index may not be ready.",
         )
     response = generate_recommendations(payload.query, hits, n = payload.n)
-    hit_by_id = {h.track_id for h in hits}
+    hit_by_id = {h.track_id: h for h in hits}
     items = []
     for rec in response.recommendations:
         hit = hit_by_id.get(rec.track_id)
