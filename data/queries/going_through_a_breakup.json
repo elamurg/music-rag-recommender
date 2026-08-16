@@ -1,0 +1,46 @@
+{
+  "query": "Going through a breakup, songs to cry to.",
+  "recommendations": [
+    {
+      "track_id": 2688,
+      "name": "How Can You Mend a Broken Heart",
+      "artist_name": "Al Green",
+      "justification": "Al Green's soulful cover of 'How Can You Mend a Broken Heart' directly addresses the pain of heartbreak with its central question about healing after loss. The lyrics explicitly reference sorrow and broken hearts, making it a perfect emotional outlet for someone processing a breakup. This soul classic from the 70s provides both the depth and catharsis needed for crying through relationship pain.",
+      "spotify_url": "https://open.spotify.com/track/6lUXneXZ9jc3HSMHgd8oqh",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 1898,
+      "name": "Carry Me Ohio",
+      "artist_name": "Sun Kil Moon",
+      "justification": "Sun Kil Moon's 'Carry Me Ohio' is described as sad and melancholic, with lyrics about being unable to love someone back and not knowing what to do or say. The song's folk singer-songwriter style and somber tone about failed love and loss makes it an intimate, emotional choice for processing breakup grief. The track's beautiful yet heartbreaking nature perfectly suits someone who needs to cry through their pain.",
+      "spotify_url": "https://open.spotify.com/track/6sNT5PF1SjTYgMiAIQGYMd",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 3035,
+      "name": "I Care",
+      "artist_name": "Beyoncé",
+      "justification": "Beyoncé's 'I Care' explicitly deals with the pain of loving someone who doesn't reciprocate or care about the hurt they've caused. According to the songfacts, Beyoncé herself was almost crying at the beginning of the song, and the lyrics express feeling deserted and crying while the other person remains indifferent. This raw emotional vulnerability makes it ideal for someone crying through a breakup.",
+      "spotify_url": "https://open.spotify.com/track/76KTeba6u3LfBL4EsCZaTe",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 8212,
+      "name": "Somebody Already Broke My Heart",
+      "artist_name": "Sade",
+      "justification": "Sade's 'Somebody Already Broke My Heart' captures the exhaustion of repeated heartbreak with lyrics about being torn apart and hurt many times before. The smooth jazz and soul arrangement provides a melancholic backdrop to themes of emotional vulnerability and relationship pain. This track from the Lovers Rock album offers both emotional resonance and the kind of reflective sadness perfect for processing a breakup.",
+      "spotify_url": null,
+      "spotify_confidence": 0
+    },
+    {
+      "track_id": 8229,
+      "name": "Come Back to Bed",
+      "artist_name": "John Mayer",
+      "justification": "John Mayer's 'Come Back to Bed' is an acoustic rock ballad that deals with the aftermath of relationship conflict and the pain of not understanding what went wrong. The intimate, confessional lyrics about tears on sheets and footsteps down the hall capture the raw domestic reality of a relationship falling apart. The singer-songwriter's emotional delivery makes this track suitable for emotional release during heartbreak.",
+      "spotify_url": "https://open.spotify.com/track/1wU7z5XE8oa66ZvUlYAKfK",
+      "spotify_confidence": 100
+    }
+  ],
+  "grounded": true
+}

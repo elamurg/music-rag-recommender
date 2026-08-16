@@ -1,0 +1,46 @@
+{
+  "query": "Lo-fi hip-hop for late night studying",
+  "recommendations": [
+    {
+      "track_id": 10494,
+      "name": "The Legend of Ashitaka (From \"Princess Mononoke\")",
+      "artist_name": "Celestial Alignment",
+      "justification": "This track is explicitly tagged as lo-fi hip hop and lo-fi beats, making it a perfect match for the query. It's described as part of a lo-fi chillbeat project specifically designed for study music, directly aligned with the late-night studying use case.",
+      "spotify_url": "https://open.spotify.com/track/3XU0ff8BFGkP9PUjLoW6ZJ",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 10546,
+      "name": "Bookstore Cafe ☕ Reading · Work · Study Session in Library Cafe 📚 Lofi Hip Hop - Chill Music",
+      "artist_name": "Healing Me",
+      "justification": "This track is explicitly designed for work and study sessions, as indicated by its title 'Reading · Work · Study Session in Library Cafe.' It's categorized as Lofi Hip Hop - Chill Music, making it ideal for late-night studying atmospheres.",
+      "spotify_url": null,
+      "spotify_confidence": 0
+    },
+    {
+      "track_id": 5156,
+      "name": "Rainforest Cafe",
+      "artist_name": "kodak cameo",
+      "justification": "This track is tagged as late night lo-fi, vaporwave, and chillwave, making it well-suited for nighttime listening. The Lo-Fi genre tag and ambient, downtempo characteristics align with the relaxed focus needed for studying.",
+      "spotify_url": null,
+      "spotify_confidence": 0
+    },
+    {
+      "track_id": 8224,
+      "name": "Dusk To Dawn",
+      "artist_name": "Emancipator",
+      "justification": "This track features instrumental hip-hop, trip-hop, and downtempo elements with chillout and lounge tags. The instrumental nature and ambient qualities make it conducive to concentration during late-night study sessions.",
+      "spotify_url": "https://open.spotify.com/track/4Rp3FX6OashtRAR60Q0Srx",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 5880,
+      "name": "Midnight in a Perfect World",
+      "artist_name": "DJ Shadow",
+      "justification": "This DJ Shadow track combines trip-hop, instrumental hip-hop, downtempo, and chillout genres with a midnight theme explicit in its title. The instrumental, atmospheric qualities and literal midnight reference make it appropriate for late-night studying.",
+      "spotify_url": "https://open.spotify.com/track/1a9maLxqpx3cxjY1lTj62B",
+      "spotify_confidence": 100
+    }
+  ],
+  "grounded": true
+}
