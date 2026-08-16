@@ -1,0 +1,46 @@
+{
+  "query": "Play me classic 80s synthwave",
+  "recommendations": [
+    {
+      "track_id": 4911,
+      "name": "Running in the Night",
+      "artist_name": "FM-84",
+      "justification": "FM-84 is explicitly tagged as synthwave, retrowave, and 80s, making it a quintessential classic synthwave track. The artist Col Bennett is described as a music producer who creates synthwave and retrowave electronic music with strong 80s influences. This track from the album 'Atlas' perfectly fits the user's request for classic 80s synthwave.",
+      "spotify_url": "https://open.spotify.com/track/5ovzDxwSZfrpqZ8LubPV7X",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 5004,
+      "name": "Arcade Summer",
+      "artist_name": "FM-84",
+      "justification": "This FM-84 track shares the exact same genre tags as 'Running in the Night': synthwave, retrowave, electronic, and 80s. Being from the same album 'Atlas' by the Scottish producer Col Bennett, it delivers the authentic classic 80s synthwave sound the user is seeking. The dreamwave and synthpop elements further reinforce its classic 80s aesthetic.",
+      "spotify_url": "https://open.spotify.com/track/6cGuuaVjtieAcw4chRhIbx",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 4927,
+      "name": "Run, Sally, Run!",
+      "artist_name": "Carpenter Brut",
+      "justification": "Carpenter Brut's track is tagged as synthwave and retro electro with strong retrowave influences, making it a solid match for classic 80s synthwave. The French artist Franck Hueso is known for his synthwave/electronic music style that evokes the 80s aesthetic. The track features synth-heavy production characteristic of the genre.",
+      "spotify_url": "https://open.spotify.com/track/1oF3xbphtSYFHYz09QNUJZ",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 4982,
+      "name": "Escape From Midwitch Valley",
+      "artist_name": "Carpenter Brut",
+      "justification": "This Carpenter Brut track from 'EP I' is classified as synthwave, retro electro, and retrowave, delivering the classic 80s synthwave sound requested. The artist's style as a synthwave/electronic music artist specializing in retro electro makes this an authentic choice. The synth and electro elements create that nostalgic 80s atmosphere.",
+      "spotify_url": null,
+      "spotify_confidence": 0
+    },
+    {
+      "track_id": 5027,
+      "name": "Wire Rot",
+      "artist_name": "Mega Drive",
+      "justification": "Mega Drive's 'Wire Rot' is tagged as synthwave, cyberpunk, and retro electro with retrowave and Outrun influences. The artist is described as an American synthwave artist, and the track description explicitly mentions being 'an 80s synth artist,' making it highly relevant to the user's request for classic 80s synthwave.",
+      "spotify_url": "https://open.spotify.com/track/5XetRJeu3ObHlKEV7hHjdG",
+      "spotify_confidence": 100
+    }
+  ],
+  "grounded": true
+}

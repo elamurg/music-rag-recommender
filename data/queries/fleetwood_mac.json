@@ -1,0 +1,46 @@
+{
+  "query": "Best songs from Fleetwood Mac",
+  "recommendations": [
+    {
+      "track_id": 255,
+      "name": "Dreams - 2004 Remaster",
+      "artist_name": "Fleetwood Mac",
+      "justification": "\"Dreams\" is Fleetwood Mac's only U.S. number one hit and remains one of their best known songs. Written by Stevie Nicks for the iconic 1977 album \"Rumours\", this track represents the band at their commercial and artistic peak. As a remastered version of their biggest hit, it's an essential Fleetwood Mac song.",
+      "spotify_url": "https://open.spotify.com/track/0ofHAoxe9vBkTCp2UQIavz",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 207,
+      "name": "The Chain - 2004 Remaster",
+      "artist_name": "Fleetwood Mac",
+      "justification": "\"The Chain\" is the only song from the legendary \"Rumours\" album with writing credits from all five band members, making it uniquely representative of the entire group. Released in 1977 during their most successful era, this track showcases the collaborative spirit and classic rock sound that defines Fleetwood Mac at their best.",
+      "spotify_url": "https://open.spotify.com/track/5e9TFTbltYBg2xThimr0rU",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 9482,
+      "name": "Everywhere - 2017 Remaster",
+      "artist_name": "Fleetwood Mac",
+      "justification": "\"Everywhere\" is a standout track from Fleetwood Mac's 14th studio album \"Tango in the Night\" (1987), written and performed by Christine McVie. The song showcases the band's evolution into the 1980s while maintaining their signature soft rock and pop rock sound, making it one of their most recognizable later-period hits.",
+      "spotify_url": "https://open.spotify.com/track/254bXAqt3zP6P50BdQvEsq",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 9555,
+      "name": "Gypsy",
+      "artist_name": "Fleetwood Mac",
+      "justification": "\"Gypsy\" from the 1982 album \"Mirage\" is a classic Stevie Nicks composition that showcases her distinctive songwriting style. Originally written around 1979, this track represents Nicks' significant contributions to Fleetwood Mac's catalog and remains a fan favorite from their successful early 1980s period.",
+      "spotify_url": "https://open.spotify.com/track/19Ym5Sg0YyOCa6ao21bdoG",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 9617,
+      "name": "Little Lies",
+      "artist_name": "Fleetwood Mac",
+      "justification": "\"Little Lies\" was the third single from \"Tango in the Night\" (1987) and represents Fleetwood Mac's successful transition into the late 1980s soft rock and art-pop sound. Released in August 1987, this track demonstrates the band's continued commercial appeal and ability to craft memorable pop-rock hits beyond their 1970s heyday.",
+      "spotify_url": "https://open.spotify.com/track/4CoSCPlKNrWli7E5kFtbcl",
+      "spotify_confidence": 100
+    }
+  ],
+  "grounded": true
+}

@@ -1,0 +1,46 @@
+{
+  "query": "Songs that feel euphoric",
+  "recommendations": [
+    {
+      "track_id": 9133,
+      "name": "Everything",
+      "artist_name": "Anathema",
+      "justification": "This Anathema track explicitly celebrates choosing love over fear of pain, with lyrics about clearing one's mind and breathing free air. The song declares 'everything is energy' and centers on liberation and emotional freedom, creating a naturally euphoric atmosphere through its progressive rock soundscapes.",
+      "spotify_url": "https://open.spotify.com/track/7jcvcCZLWrrx1MTyFkRvvt",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 9091,
+      "name": "Thin Air",
+      "artist_name": "Anathema",
+      "justification": "Anathema's 'Thin Air' centers on the feeling that 'love is free' with lyrics asking 'you know how it feels' in a contemplative, uplifting manner. The atmospheric progressive rock style combined with themes of freedom, peace, and living in the present moment creates an emotionally elevated experience.",
+      "spotify_url": "https://open.spotify.com/track/1HyBDuu71uUI4DOKOmqmlG",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 9209,
+      "name": "Ariel",
+      "artist_name": "Anathema",
+      "justification": "This Anathema track describes finding someone in darkness and experiencing 'a love so strong it hurts' while 'staring at the sun.' The lyrics convey intense emotional connection and dreaming, creating moments of transcendence that align with euphoric feelings despite the band's typically melancholic style.",
+      "spotify_url": "https://open.spotify.com/track/3nzk5jOeE72HUkfZZ42RQc",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 9101,
+      "name": "Temporary Peace",
+      "artist_name": "Anathema",
+      "justification": "Anathema's 'Temporary Peace' features imagery of waves washing over half-forgotten memories and laughter floating on the breeze. The atmospheric progressive rock combines with these peaceful, liberating natural images to create moments of emotional release and temporary transcendence.",
+      "spotify_url": "https://open.spotify.com/track/182ANytzUvo2tZGHjSWlZV",
+      "spotify_confidence": 100
+    },
+    {
+      "track_id": 10695,
+      "name": "Where the Light Takes Us",
+      "artist_name": "Blanket",
+      "justification": "Blanket's shoegaze and post-rock soundscapes in 'Where the Light Takes Us' suggest an atmospheric journey toward illumination. The title itself implies movement toward something brighter, and the genre's characteristic wall-of-sound approach can create immersive, uplifting sonic experiences.",
+      "spotify_url": "https://open.spotify.com/track/4snkqZT7XxtKR8pt8yt6Ee",
+      "spotify_confidence": 100
+    }
+  ],
+  "grounded": true
+}
