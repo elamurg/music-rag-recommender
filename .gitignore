@@ -14,9 +14,11 @@ build/
 env/
 
 # Data files — never commit raw or processed data
-data/raw/
+data/raw/*
+!data/raw/corpus.db
 data/processed/
-data/embeddings/
+data/embeddings/*
+!data/embeddings/corpus.faiss
 *.parquet
 *.csv
 *.json.gz
@@ -49,6 +51,7 @@ coverage.xml
 # FAISS indexes
 *.index
 *.faiss
+!data/embeddings/corpus.faiss
 
 # Model weights and caches
 *.bin
