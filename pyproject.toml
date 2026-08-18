@@ -25,5 +25,3 @@ where = ["src"]
 
 [project.urls]
 Repository = "https://github.com/elamurg/music-rag-recommender"
-Documentation = "https://github.com/elamurg/music-rag-recommender/blob/main/README.md"
-
