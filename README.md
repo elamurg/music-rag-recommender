@@ -23,19 +23,16 @@ This README is written to enable an examiner to understand, install and run this
 1. [Overview](#overview)
 2. [Project structure at a glance](#project-structure-at-a-glance)
 3. [Data files required for reproduction](#data-files-required-for-reproduction)
-4. [Quick start (Docker) — 3 commands](#quick-start-docker--3-commands)
+4. [Quick start (Docker)](#quick-start-docker)
 5. [Environment variables and where to obtain them](#environment-variables-and-where-to-obtain-them)
 6. [Repository structure — full file-by-file reference](#repository-structure--full-file-by-file-reference)
 7. [Running the service](#running-the-service)
 8. [Testing the endpoints](#testing-the-endpoints)
 9. [Reproducing the evaluation](#reproducing-the-evaluation)
-10. [Running the test suite](#running-the-test-suite)
-11. [Rebuilding the corpus from scratch (advanced)](#rebuilding-the-corpus-from-scratch-advanced)
-12. [Running without deployment (offline evaluation of the system)](#running-without-deployment-offline-evaluation-of-the-system)
-13. [Cross-references to thesis document](#cross-references-to-thesis-document)
-14. [Requirements](#requirements)
-15. [Citation and license](#citation-and-license)
-
+10. [Rebuilding the corpus from scratch](#rebuilding-the-corpus-from-scratch-advanced)
+11. [Running without deployment (offline evaluation of the system)](#running-without-deployment-offline-evaluation-of-the-system)
+12. [Cross-references to thesis document](#cross-references-to-thesis-document)
+13. [Requirements](#requirements)
 ---
 
 ## Overview
@@ -173,6 +170,8 @@ music-rag-recommender/
 ├── README.md
 ├── requirements-dev.txt
 └── requirements.txt
+```
+
 ---
 
 ## File-by-file reference
